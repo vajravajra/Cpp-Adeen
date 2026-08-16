@@ -1,6 +1,8 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib>   // for rand(), srand()
+#include <ctime>     // for time()
 using namespace std;
 
 
@@ -13,10 +15,8 @@ public:
     virtual string decrypt(string text) = 0;
 };
  
- 
 // CAESAR CIPHER   
 
- 
 class CaesarCipher : public Cipher 
 {
 private:
@@ -24,7 +24,25 @@ private:
 public:
     CaesarCipher(string key) 
     {
-        shift = stoi(key);
+        bool isNumber = true;
+ 
+        for (char c : key)
+        {
+            if (isdigit(c) == 0)
+            {
+                isNumber = false;
+                break;
+            }
+        }
+ 
+        if (isNumber)
+        {
+            shift = stoi(key);
+        }
+        else
+        {
+            shift = 0;
+        }
     }
  
     string encrypt(string text) override 
@@ -75,18 +93,73 @@ private:
     string key;
  
 public:
-    VigenereCipher(string key) {
-        this->key = key;
+    VigenereCipher(string k)
+    {
+        key = k;
     }
  
-    string encrypt(string text) override {
-        cout << "[dummy function]\n";
-        return text;
+    string encrypt(string text) override
+    {
+        string result;
+        int keyIndex = 0;
+ 
+        for (char c : text)
+        {
+            if (isalpha(c))
+            {
+                char base;
+                if (isupper(c)) 
+                {
+                    base = 'A';
+                } else 
+                {
+                    base = 'a';
+                }
+                int shift = toupper(key[keyIndex % key.length()]) - 'A';
+ 
+                result += char((c - base + shift) % 26 + base);
+ 
+                keyIndex++;
+            }
+            else
+            {
+                result += c;
+            }
+        }
+ 
+        return result;
     }
  
-    string decrypt(string text) override {
-        cout << "[dummy function]\n";
-        return text;
+    string decrypt(string text) override 
+    {
+        string result;
+        int keyIndex = 0;
+ 
+        for (char c : text)
+        {
+            if (isalpha(c))
+            {
+                char base;
+                if (isupper(c)) 
+                {
+                    base = 'A';
+                } else 
+                {
+                    base = 'a';
+                }
+                int shift = toupper(key[keyIndex % key.length()]) - 'A';
+ 
+                result += char((c - base - shift + 26) % 26 + base);
+ 
+                keyIndex++;
+            }
+            else
+            {
+                result += c;
+            }
+        }
+ 
+        return result;
     }
 };
  
@@ -94,43 +167,62 @@ public:
 // XOR CIPHER  
 
  
-class XORCipher : public Cipher {
+class XORCipher : public Cipher
+{
 private:
     string key;
  
 public:
-    XORCipher(string key) {
-        this->key = key;
+    XORCipher(string k)
+    {
+        key = k;
     }
  
-    string encrypt(string text) override {
-        cout << "[dummy function]\n";
-        return text;
+    string encrypt(string text) override
+    {
+        string result = text;
+ 
+        for (size_t i = 0; i < text.length(); i++)
+        {
+            result[i] = text[i] ^ key[i % key.length()];
+        }
+ 
+        return result;
     }
  
-    string decrypt(string text) override {
-        cout << "[dummy function]\n";
-        return text;
+    string decrypt(string text) override
+    {
+        // XOR encryption and decryption are the same operation
+        return encrypt(text);
     }
 };
  
  
 // RANDOM KEY GENERATOR FUNCTIONS
 
- 
-string generateCaesarKey() 
+string generateCaesarKey()
 {
-    return "meow";
+    int shift = rand() % 25 + 1;   // random number from 1 to 25
+    return to_string(shift);
 }
  
-string generateTextKey() 
+string generateTextKey()
 {
-    return "meow";
-}
+    const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
  
+    string key;
+    for (int i = 0; i < 8; i++)
+    {
+        key += characters[rand() % 26];
+    }
+ 
+    return key;
+}
 
 int main() 
-{ 
+{
+    srand(time(0));  // seed for the random number generator 
+ 
     int choice;
     int operation;
  
@@ -175,25 +267,26 @@ int main()
        else
        {
             key = generateTextKey();
-        }
+       }
         cout << "Generated key: " << key << endl;
     }
  
+    CaesarCipher caesar(key);
+    VigenereCipher vigenere(key);
+    XORCipher xorCipher(key);
+ 
     Cipher* cipher;
  
-    if (choice == 1) 
+    if (choice == 1)
     {
-        CaesarCipher caesar(key);
         cipher = &caesar;
     }
-    else if (choice == 2) 
+    else if (choice == 2)
     {
-        VigenereCipher vigenere(key);
         cipher = &vigenere;
     }
-    else if (choice == 3) 
+    else if (choice == 3)
     {
-        XORCipher xorCipher(key);
         cipher = &xorCipher;
     }
  
